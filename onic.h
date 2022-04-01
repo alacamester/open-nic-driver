@@ -21,6 +21,7 @@
 #include <linux/cpumask.h>
 
 #include "onic_hardware.h"
+#include "onic_cdev.h"
 
 #define ONIC_MAX_QUEUES			64
 
@@ -113,6 +114,7 @@ struct onic_private {
 	struct onic_rx_queue *rx_queue[ONIC_MAX_QUEUES];
 
 	struct onic_hardware hw;
+	struct onic_cdev oc;
 };
 
 #endif

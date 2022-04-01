@@ -37,7 +37,7 @@ char onic_drv_name[] = "onic";
 char onic_drv_name[] = "open-nic-vf";
 #endif
 
-#define DRV_VER "0.21"
+#define DRV_VER "0.22"
 const char onic_drv_str[] = DRV_STR;
 const char onic_drv_ver[] = DRV_VER;
 
@@ -222,6 +222,10 @@ static int onic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 		goto clear_capacity;
 	}
 
+//L : create ONIC-CHAR device
+	if (test_bit(ONIC_FLAG_MASTER_PF,priv->flags))
+	    rv = onic_create_cdev(priv);
+
 	rv = onic_init_interrupt(priv);
 	if (rv < 0) {
 		dev_err(&pdev->dev, "onic_init_interrupt, err = %d", rv);
@@ -270,6 +274,8 @@ static void onic_remove(struct pci_dev *pdev)
 	onic_clear_interrupt(priv);
 	onic_clear_hardware(priv);
 	onic_clear_capacity(priv);
+	if (test_bit(ONIC_FLAG_MASTER_PF,priv->flags))
+	    onic_delete_cdev(priv);
 
 	free_netdev(priv->netdev);
 
