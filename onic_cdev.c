@@ -148,7 +148,7 @@ int onic_create_cdev(void *pip)
 		unregister_chrdev_region(pocdev->cdevno, ONICDEV_MINOR_COUNT);
 		if (pocdev->ponicdev_class)
 		{
-			class_unregister(pocdev->ponicdev_class);
+//			class_unregister(pocdev->ponicdev_class);
 			class_destroy(pocdev->ponicdev_class);
 			pocdev->ponicdev_class = NULL;
 		}
@@ -171,7 +171,7 @@ int onic_delete_cdev(void *pip)
 	unregister_chrdev_region(pocdev->cdevno, 1);
 	if (pocdev->ponicdev_class)
 	{
-		class_unregister(pocdev->ponicdev_class);
+//		class_unregister(pocdev->ponicdev_class);
 		class_destroy(pocdev->ponicdev_class);
 		pocdev->ponicdev_class = NULL;
 	}
