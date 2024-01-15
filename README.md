@@ -1,16 +1,16 @@
 # AMD OpenNIC Driver
 
-This is one of the two components of the
-[OpenNIC project](https://github.com/Xilinx/open-nic.git).  The other component is
-[OpenNIC shell](https://github.com/Xilinx/open-nic-shell.git).
+This is one of the three components of the
+[OpenNIC project](https://github.com/Xilinx/open-nic.git).  The other components are:
+- [OpenNIC shell](https://github.com/Xilinx/open-nic-shell.git) and
+- [OpenNIC DPDK](https://github.com/Xilinx/open-nic-dpdk.git).
 
 OpenNIC driver implements a Linux kernel driver for OpenNIC shell.  It supports
 multiple PCI-e PFs with multiple TX/RX queues in each PF, and up to two 100Gbps
 ports on the same card.  As of version 1.0, the driver has not implemented the
 ethtool routines to change the hash key and the indirection table.
 
-The driver has been tested on under Ubuntu 18.04 with Linux kernel version
-4.15.0 and 5.3.0.
+The driver has been tested on under Ubuntu 18.04, 20.04, and 22.04 with multiple versions of the Linux kernel.
 
 ## Building the Driver
 
@@ -65,6 +65,122 @@ is `enp216s0f0` and the IP address is `192.168.1.10`.
 2. Run `ping 192.168.1.10`.
 3. Observe that packets captured by `tcpdump` are always duplicated.
 
+### ETHTOOL Test
+
+`ethtool` is a Linux utility and used to control and read status of
+various MAC parameters. Also, this tool is used to obtain various counter registers
+(such as total good packets etc.) from the MAC.
+
+  If the tool is not found, install it from distro.
+
+  ```
+  $ sudo apt install ethtool
+  ```
+
+  List all options that the tool can support
+
+  ```
+  $ ethtool -h
+  ```
+
+  List active interfaces, activate required interface
+  Note: assume interface name is xyz01, IP address is 192.168.1.1
+
+  ```
+  $ ifconfig -a
+
+  $ ifconfig xyz01 192.168.1.1 up
+  ```
+
+  Use ethtool interface to see the status
+  Note: assume interface name is xyz01
+
+  ```
+  $ ethtool xyz01
+  ```
+
+  Show driver information
+  Note: assume interface name is xyz01
+
+  ```
+  $ ethtool -i xyz01
+  ```
+
+  Show adapter statistics
+  Note: assume interface name is xyz01
+
+  ```
+  $ ethtool -S xyz01
+  ```
+
+### LM-SENSORS Test
+
+  To install lm-sensors framework:
+  
+     $ sudo apt install lm-sensors
+  
+     This installs 'sensors' application here: /usr/bin/sensors
+  
+  To enable lm-sensors framework support in open-nic
+  
+     a. In the file "onic_main.c", enable macro "CMS_SUPPORT"
+
+     b. build the open-nic driver as explained above
+
+  To test LM-SENSORS support in the open-nic
+  
+     Note: CMS IP in the design need to be added
+     
+     a, Load the kernel driver as explained above
+
+     b. Run the sensors application, to see the data
+        
+        The output looks as below:
+
+        $ sensors
+
+         sn1000-onic-isa-0000
+
+         Adapter: ISA adapter
+      
+         12V PEX:         +12.22 V  (max = +12.22 V, avg = +12.21 V)
+      
+         12V AUX:         +12.26 V  (max = +12.26 V, avg = +12.25 V)
+      
+         3V3 PEX:          +3.26 V  (max =  +3.26 V, avg =  +3.26 V)
+      
+         1V8 TOP:          +1.80 V  (max =  +1.80 V, avg =  +1.80 V)
+      
+         VCC INT:          +0.85 V  (max =  +0.85 V, avg =  +0.85 V)
+      
+         VCC 3V3:          +3.27 V  (max =  +3.27 V, avg =  +3.27 V)
+      
+         PCB TOP FRONT:    +44.0°C  (highest = +45.0°C)
+      
+         PCB TOP REAR:     +47.0°C  (highest = +48.0°C)
+      
+         FPGA TEMP:        +58.0°C  (highest = +59.0°C)
+      
+         QSPF 0:            +0.0°C  (highest =  +0.0°C)
+      
+         QSPF 1:            +0.0°C  (highest =  +0.0°C)
+      
+         POWER:            38.66 W  (avg =  40.42 W)
+      
+         12V PEX Current:  +2.07 A  (max =  +2.15 A, avg =  +2.08 A)
+      
+         12V AUX Current:  +0.76 A  (max =  +0.81 A, avg =  +0.75 A)
+      
+         VCC INT Current: +10.00 A  (max = +10.60 A, avg = +10.00 A)
+      
+         3V3 PEX Current:  +1.24 A  (max =  +1.29 A, avg =  +1.24 A)
+
+         ... ... ...
+         sensor output for other devices
+         ... ... ...
+         ... ... ...
+
+
 ## Known Issues
 
 ### Static IP Address
@@ -78,9 +194,11 @@ Assigning a static network address seems to solve the issue in most cases.  Add
 the following lines into `/etc/network/interfaces` with the correct interface
 name, IP address.
 
+    ```
     auto IF_NAME
     iface IF_NAME inet static
           address IP_ADDRESS
+    ```
 
 An alternative is to uninstall DHCP.  This can be done by killing any running processes using DHCP with
 `ps -eF | grep dhclient`, and then to disable DHCP.
